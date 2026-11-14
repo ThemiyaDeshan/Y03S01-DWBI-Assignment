@@ -121,7 +121,9 @@ An **SSAS Multidimensional** cube (`OlistSalesCube`) sits on the warehouse; **Po
 2. **Trend Analysis:** sales and review-score trends, region and category comparisons
 3. **Interactive Analysis:** slicers, Region → State → City roll-up, Year → Quarter → Month drill-down
 
-
+![Executive Summary dashboard](PDFs/images/page1-executive-summary.png)
+![Executive Summary dashboard](PDFs/images/page-trend-analysis.png)
+![Executive Summary dashboard](PDFs/images/page3-interactive-analysis.png)
 
 ## Key findings
 
