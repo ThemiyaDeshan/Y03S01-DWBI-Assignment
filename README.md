@@ -121,7 +121,7 @@ An **SSAS Multidimensional** cube (`OlistSalesCube`) sits on the warehouse; **Po
 2. **Trend Analysis:** sales and review-score trends, region and category comparisons
 3. **Interactive Analysis:** slicers, Region → State → City roll-up, Year → Quarter → Month drill-down
 
-<!-- Add screenshots, e.g.: ![Executive Summary](docs/images/page1.png) -->
+
 
 ## Key findings
 
@@ -137,15 +137,15 @@ An **SSAS Multidimensional** cube (`OlistSalesCube`) sits on the warehouse; **Po
 
 ```
 /sql
-  dw_schema.sql                 Creates assignment_dw, dimensions and fact table
-  etl_staging_and_extract.sql   Staging tables + JSON extraction
-  etl_load_FINAL.sql            Transform, truncate-and-reload dimensions and fact, validation
-  task6_data_mart.sql           Delivery-column migration, mart view and summary table
+  Dimensional_Data_Warehouse_Implementation_Final.sql
+  ETL_Process_Development_Final.sql
+  Data_Mart_Development.sql
+  Final_SQL_Script.sql
 /ssis                           SSIS project (Excel, Flat File and OLE DB data flows)
 /ssas                           OlistOLAP project (SSAS Multidimensional)
 /powerbi                        Dashboard (.pbix)
-/docs                           Report, slides, screenshots
-/data                           (git-ignored) place the converted source files here
+/PDFs                           Report
+/data.zip                       Converted Dataset files
 ```
 
 ## How to run
