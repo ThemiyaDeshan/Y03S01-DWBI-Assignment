@@ -33,7 +33,7 @@ This project builds a warehouse and BI layer that answers those questions fast, 
 
 **Dataset:** [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) (Kaggle), orders from 2016 to 2018. About 99,400 orders and 1.55 million rows across 9 files.
 
-> The dataset is **not included** in this repository. Download it from Kaggle (check the licence on the dataset page) and convert it as described below.
+> The original Kaggle files are **not included** in this repository (check the licence on the dataset page). `data.zip` contains the converted source files (Excel, JSON and CSV). The three SQL Server source tables (orders, order_items, customers) must be loaded from the Kaggle download.
 
 To demonstrate real multi-source integration, the nine CSV files were redistributed across four source types:
 
@@ -121,9 +121,9 @@ An **SSAS Multidimensional** cube (`OlistSalesCube`) sits on the warehouse; **Po
 2. **Trend Analysis:** sales and review-score trends, region and category comparisons
 3. **Interactive Analysis:** slicers, Region → State → City roll-up, Year → Quarter → Month drill-down
 
-![Executive Summary dashboard](PDFs/images/page1-executive-summary.png)
-![Executive Summary dashboard](PDFs/images/page2-trend-analysis.png)
-![Executive Summary dashboard](PDFs/images/page3-interactive-analysis.png)
+![Executive Summary dashboard page](PDFs/images/page1-executive-summary.png)
+![Trend Analysis dashboard page](PDFs/images/page2-trend-analysis.png)
+![Interactive Analysis dashboard page](PDFs/images/page3-interactive-analysis.png)
 
 ## Key findings
 
@@ -138,30 +138,33 @@ An **SSAS Multidimensional** cube (`OlistSalesCube`) sits on the warehouse; **Po
 ## Repository structure
 
 ```
-/sql
-  Dimensional_Data_Warehouse_Implementation_Final.sql
-  ETL_Process_Development_Final.sql
-  Data_Mart_Development.sql
-  Final_SQL_Script.sql
-/ssis                           SSIS project (Excel, Flat File and OLE DB data flows)
+/SQL
+  Dimensional_Data_Warehouse_Implementation_Final.sql   Task 4: warehouse schema
+  ETL_Process_Development_Final.sql                     Task 5: staging, JSON extract, transform, load, validation
+  Data_Mart_Development.sql                             Task 6: data mart view and table
+  Final_SQL_Script.sql                                  All three scripts combined in one file
+/ssis                           SSIS project (Load_Staging.dtsx: OLE DB, Excel and Flat File data flows)
 /ssas                           OlistOLAP project (SSAS Multidimensional)
-/powerbi                        Dashboard (.pbix)
-/PDFs                           Report
-/data.zip                       Converted Dataset files
+/powerbi                        Assignment_Dashboard_Cube.pbix (live connection to the cube)
+                                Assignment_Dashboard.pbix (earlier Power BI-only version)
+/PDFs                           Task 1-8 reports; /PDFs/images holds the dashboard screenshots
+/data.zip                       Converted source files (Excel, JSON, CSV)
 ```
 
 ## How to run
 
 **Requirements:** SQL Server, SQL Server Integration Services, SQL Server Analysis Services (Multidimensional), Visual Studio with SQL Server Data Tools (SSDT), Power BI Desktop.
 
-1. **Get the data.** Download the Olist dataset from Kaggle and convert the files per the table in [Dataset and sources](#dataset-and-sources) (load orders/order_items/customers into SQL Server; save sellers/products as `.xlsx`; save reviews/geolocation as `.json`; keep payments and the category lookup as `.csv`).
-2. **Create the warehouse.** Run `sql/dw_schema.sql`.
-3. **Create staging and load JSON.** Edit the two file paths in `sql/etl_staging_and_extract.sql`, then run it.
-4. **Load the remaining staging tables.** Run the SSIS package(s) in `/ssis` (update connection managers for your server and file paths).
-5. **Transform and load the warehouse.** Run `sql/etl_load_FINAL.sql`. It is safe to re-run: it truncates and rebuilds the dimensions and fact table, but does not touch staging. Check that all validation queries at the end return the expected results.
-6. **Build the data mart.** Run `sql/task6_data_mart.sql`.
-7. **Deploy the cube.** Open the project in `/ssas`, point the data source at `assignment_dw`, then **Deploy** and **Process Full**.
-8. **Open the dashboard.** In Power BI Desktop, connect live to the deployed `OlistSalesCube` and open the `.pbix`.
+1. **Get the data.** Unzip `data.zip` for the converted files (`sellers.xlsx`, `products.xlsx`, `order_reviews.json`, `geolocation.json`, `order_payments.csv`, `category_translation.csv`). Download the Olist dataset from Kaggle and load `orders`, `order_items` and `customers` into a SQL Server source database. See [Dataset and sources](#dataset-and-sources) for how the files are split.
+2. **Create the warehouse.** Run `SQL/Dimensional_Data_Warehouse_Implementation_Final.sql`. It creates `assignment_dw`, the dimensions and `Fact_Sales`.
+3. **Create staging and load JSON.** Open `SQL/ETL_Process_Development_Final.sql` and edit the two `OPENROWSET` file paths in section 2 so they point to your `order_reviews.json` and `geolocation.json`. Run **sections 1 and 2 only** (everything before the section 3 header). This creates the `Stg_*` tables and loads the two JSON sources.
+4. **Load the remaining staging tables.** Open `ssis/Assignment_ETL.slnx`, update the connection managers (SQL Server source, Excel and CSV file paths), and run `Load_Staging.dtsx`. It fills the other seven staging tables.
+5. **Transform and load the warehouse.** Run the whole of `SQL/ETL_Process_Development_Final.sql`. It is safe to re-run: it reloads the two JSON staging tables, then truncates and rebuilds the dimensions and fact table, leaving the SSIS-loaded staging tables untouched. Check that the validation queries at the end return the expected results (0 orphaned keys, 0 payment mismatches, 110,194 fact rows).
+6. **Build the data mart.** Run `SQL/Data_Mart_Development.sql`.
+7. **Deploy the cube.** Open `ssas/OlistOLAP/OlistOLAP.slnx` in Visual Studio, point the `Assignment Dw` data source at your `assignment_dw` database, set the deployment target to your SSAS Multidimensional instance, then **Deploy** and **Process Full**.
+8. **Open the dashboard.** Open `powerbi/Assignment_Dashboard_Cube.pbix`. It uses a live connection to `OlistOLAP` / `OlistSalesCube`, so change the server under **File > Options > Data source settings** to your own SSAS instance.
+
+`SQL/Final_SQL_Script.sql` contains the schema, ETL and data mart scripts in one file for reading. For a fresh run, follow the order above, because SSIS has to fill the staging tables in the middle.
 
 ## Design decisions
 
@@ -173,4 +176,4 @@ An **SSAS Multidimensional** cube (`OlistSalesCube`) sits on the warehouse; **Po
 ## Acknowledgements
 
 - Dataset: Olist, via Kaggle. Please follow the licence on the dataset page.
-- AI tools were used for brainstorming, drafting documentation and debugging support, in line with the module's AI-use policy. All implementation was reviewed, run and validated by the team. `<edit to match your report's declaration>`
+- AI tools were used for brainstorming, drafting documentation and debugging support, in line with the module's AI-use policy. All implementation was reviewed, run and validated by the team.
